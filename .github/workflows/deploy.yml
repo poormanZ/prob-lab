@@ -52,4 +52,5 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          curl --fail --silent --show-error "${APP_URL}/health"
+          # A first deploy can 404 for a few seconds while the workers.dev route propagates.
+          curl --fail --silent --show-error --retry 10 --retry-delay 6 --retry-all-errors "${APP_URL}/health"
