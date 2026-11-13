@@ -1,0 +1,27 @@
+{
+  "name": "prob-theory-lab",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "build": "esbuild src/client/app.ts --bundle --format=esm --target=es2022 --minify --outfile=dist/app.js && cp static/index.html static/style.css dist/",
+    "balance": "node scripts/balance.ts --write",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.client.json",
+    "test": "vitest run",
+    "check": "npm run lint && npm run typecheck && npm test",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "latest",
+    "@eslint/js": "latest",
+    "eslint": "latest",
+    "typescript-eslint": "8.69.0",
+    "typescript": "latest",
+    "vitest": "latest",
+    "wrangler": "latest",
+    "esbuild": "0.28.2",
+    "@types/node": "latest"
+  }
+}
