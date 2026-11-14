@@ -107,6 +107,11 @@ describe("records and ranking", () => {
     expect(await save(5, 2000)).toMatchObject({ updated: true, best: { best_stage: 5, best_amount: 2000 } });
   });
 
+  it("accepts a jackpot cash-out at the cap", async () => {
+    const sid = await signUp("jackpot");
+    expect((await send("/api/records", "POST", { stage: 3, amount: maxAmountAt(3) }, sid)).status).toBe(200);
+  });
+
   it("rejects impossible records", async () => {
     const sid = await signUp("cheater");
     for (const body of [{ stage: 0, amount: 1 }, { stage: MAX_STAGE + 1, amount: 1 }, { stage: 2.5, amount: 1 }, { stage: 3, amount: maxAmountAt(3) + 1 }, { stage: 3 }]) {

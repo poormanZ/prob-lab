@@ -19,7 +19,7 @@ const sendJson = (path: string, method: string, body: unknown): Promise<Response
 const renderGuest = (box: HTMLElement): void => {
   const login = el("a", "카카오로 로그인", "kakao");
   login.href = "/auth/kakao";
-  box.append(el("span", notice || "로그인하면 최고 기록이 랭킹에 올라갑니다.", notice ? "acc-msg bad" : "acc-msg"), login);
+  box.append(el("span", notice || "로그인하면 상금 받기로 확정한 최고 기록이 랭킹에 올라갑니다.", notice ? "acc-msg bad" : "acc-msg"), login);
 };
 
 const renderSignup = (box: HTMLElement): void => {
@@ -60,7 +60,7 @@ const renderUser = (box: HTMLElement, username: string, best: Best | null): void
   };
   box.append(
     el("strong", username, "acc-name"),
-    el("span", best ? `내 최고 ${best.best_stage}단계 · ${won(best.best_amount)}` : "아직 기록 없음", "acc-best"),
+    el("span", best ? `내 최고 ${best.best_stage}단계 · ${won(best.best_amount)}` : "상금을 받으면 기록됩니다", "acc-best"),
     logout,
   );
 };
@@ -91,7 +91,7 @@ export const mountAccount = async (container: HTMLElement): Promise<void> => {
   render();
 };
 
-// Sends only improvements over the known best, so a long climb costs one request per new stage.
+// Sends only improvements over the known best; most cash-outs need no request.
 export const reportStage = async (stage: number, amount: number): Promise<Best | null> => {
   if (!me?.user.username || stage <= 0) return null;
   const b = me.best;

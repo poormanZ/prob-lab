@@ -8,7 +8,8 @@ const maxedRewardState = ((): GameState => {
   return s;
 })();
 // wins can outrun the stage when safety nets keep a run alive, so give it generous headroom.
-export const maxAmountAt = (stage: number): number => Math.ceil(rewardAt(maxedRewardState, stage, stage * 3));
+// ×2 covers the jackpot option, which doubles the cash-out.
+export const maxAmountAt = (stage: number): number => Math.ceil(rewardAt(maxedRewardState, stage, stage * 3) * 2);
 
 export type RecordInput = { stage: number; amount: number };
 

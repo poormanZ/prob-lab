@@ -172,11 +172,9 @@ const describe = (o: ChallengeOutcome): [string, "ok" | "bad", "win" | "lose"] =
   }
 };
 
-// Records the stage the moment it is reached: a later failure must not erase it.
-const record = (): void => {
-  const { stage } = game;
-  if (stage <= 0) return;
-  void reportStage(stage, rewardAt(game, stage)).then((best) => {
+// Only a cash-out counts for the ranking; a run that ends in failure leaves no record.
+const record = (stage: number, payout: number): void => {
+  void reportStage(stage, payout).then((best) => {
     if (best) $("log").prepend(el("li", `랭킹 기록 갱신 : ${best.best_stage}단계 · ${won(best.best_amount)}`, "ok"));
   });
 };
@@ -191,7 +189,6 @@ const doChallenge = (): void => {
   const [text, tone, motion] = describe(out);
   feedback(text, tone, motion);
   render();
-  record();
 };
 const doCashOut = (): void => {
   if (game.stage === 0) return;
@@ -201,13 +198,13 @@ const doCashOut = (): void => {
   stats.banked += payout;
   feedback(`${stage}단계에서 ${won(payout)} 받음${jackpot ? " (잭팟! 2배)" : ""}`, "ok", jackpot ? "win" : undefined);
   render();
+  record(stage, payout);
 };
 const pick = (id: OptionId): void => {
   game = chooseOption(game, id);
   stats.max = Math.max(stats.max, game.stage);
   feedback(`옵션 선택 : ${optionName(id)}`, "");
   render();
-  record();
   $("challenge").focus();
 };
 
