@@ -226,3 +226,41 @@ tr.best td:first-child::after{content:" ★";color:var(--gold)}
   .bar{grid-template-columns:40px 1fr 96px}
   .rank-table .day,.rank-table th:last-child{display:none}
 }
+
+/* duel page */
+.g-능력{--c:var(--gold)}.g-공격{--c:var(--fail)}.g-방어{--c:var(--guard)}.g-충전{--c:var(--step)}.g-간파{--c:var(--prob)}
+.guide .fx.neg{color:var(--muted)}
+.duel .stage-num small{font-size:18px}
+.rung.lost{background:var(--fail);color:#fff}
+.rung.lost .amt,.rung.lost .p{color:#fff;opacity:.9}
+.fighters{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:20px 0 12px}
+.fighter{position:relative;border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:var(--bg)}
+.fighter h3{margin:0 0 8px;font-size:15px}
+.fighter.me{border-top:4px solid var(--prob)}
+.fighter.foe{border-top:4px solid var(--fail)}
+.fighter.charged{box-shadow:0 0 0 2px var(--step)}
+.fighter .st{margin:8px 0 0;font-size:14px;font-weight:600}
+.hp-num{font-size:13px;color:var(--muted)}
+.hp-track{height:10px;border-radius:5px;background:var(--rung);overflow:hidden;margin-top:4px}
+.hp-fill{height:100%;background:var(--guard);transition:width .25s}
+.hp.foe .hp-fill{background:var(--fail)}
+.badge{display:inline-block;margin:8px 6px 0 0;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:700;background:color-mix(in srgb,var(--step) 18%,transparent);color:var(--step)}
+.badge.warn{background:color-mix(in srgb,var(--fail) 16%,transparent);color:var(--fail)}
+.badge.soft{background:color-mix(in srgb,var(--guard) 16%,transparent);color:var(--guard)}
+.actions.three{grid-template-columns:repeat(3,1fr);margin-top:14px}
+.actions .restart{grid-column:1/-1}
+.btn.act{display:flex;flex-direction:column;align-items:center;gap:2px;border-width:2px;width:100%;min-width:0}
+.btn.act .odds{font-size:12.5px;font-weight:600;color:var(--muted);min-height:1.2em}
+.btn.atk{border-color:var(--fail);color:var(--fail)}
+.btn.def{border-color:var(--guard);color:var(--guard)}
+.btn.chg{border-color:var(--step);color:var(--step)}
+.btn.act.top{background:color-mix(in srgb,currentColor 12%,var(--surface))}
+.btn.act.top .odds{color:inherit}
+@media (max-width:640px){
+  .fighters{gap:8px;margin:12px 0 8px}
+  .fighter{padding:10px}
+  .fighter .st{font-size:13px}
+  .actions.three{margin-top:0}
+  .btn.act{padding:10px 6px}
+}
+.reward strong.bad{color:var(--fail)}

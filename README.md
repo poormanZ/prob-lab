@@ -11,6 +11,12 @@
 
 * 규칙·옵션 자세한 설명 : [`docs/guide.md`](docs/guide.md). 데모 화면에는 짧은 설명만 둠
 
+## 대결 실험 (`/duel`)
+* 공격·방어·충전 중 하나를 고르면 상대도 셋 중 하나를 무작위로 고름
+* 나는 체력 1, 공격 1, 방어 1로 시작. 상대는 스테이지마다 강해짐 (0~20스테이지)
+* 스테이지를 깰 때마다 옵션 3개 중 1개를 고름
+* 자세한 규칙·옵션·측정 결과 : [`docs/duel.md`](docs/duel.md)
+
 ## 구조
 * `src/game.ts` : 게임 규칙·옵션 정의 (서버, 페이지, 밸런스 스크립트가 같이 씀)
 * `src/client/app.ts` : 페이지 스크립트 → `npm run build` 로 `dist/app.js` 생성
@@ -22,6 +28,9 @@
 * `src/client/account.ts` : 로그인 바, 기록 전송 (게임·랭킹 페이지 공용)
 * `static/ranking.html` + `src/client/ranking.ts` : `/ranking` 페이지
 * `migrations/` : D1(Cloudflare SQLite DB) 테이블
+* `src/duel.ts` : 대결 규칙·옵션·최적 확률 계산(DP)
+* `static/duel.html` + `src/client/duel.ts` : `/duel` 페이지
+* `scripts/duel-balance.ts` : 대결 옵션 순위 측정 → `src/duel-report.json` 저장 (`npm run balance:duel`)
 
 ## 로그인·랭킹
 * 흐름 : 카카오 로그인 → 처음이면 아이디 만들기 → 상금 받기를 누른 판만 기록 저장 (실패한 판은 안 남음)

@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
-    "build": "esbuild src/client/app.ts src/client/ranking.ts --bundle --format=esm --target=es2022 --minify --outdir=dist && cp static/index.html static/ranking.html static/style.css dist/",
+    "build": "esbuild src/client/app.ts src/client/ranking.ts src/client/duel.ts --bundle --format=esm --target=es2022 --minify --outdir=dist && cp static/index.html static/ranking.html static/duel.html static/style.css dist/",
     "balance": "node scripts/balance.ts --write",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.client.json",
@@ -13,7 +13,8 @@
     "check": "npm run lint && npm run typecheck && npm test",
     "deploy": "wrangler deploy",
     "db:migrate:local": "wrangler d1 migrations apply prob-theory-lab-db --local",
-    "db:migrate:remote": "wrangler d1 migrations apply prob-theory-lab-db --remote"
+    "db:migrate:remote": "wrangler d1 migrations apply prob-theory-lab-db --remote",
+    "balance:duel": "node scripts/duel-balance.ts --write"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "latest",
