@@ -1,7 +1,7 @@
 import report from "../balance-report.json";
 import {
   autoPlayRun, baseStageTable, cashOut, challenge, chooseOption, continueGain, grantOption, MAX_STACKS, MAX_STAGE,
-  newGame, optionCost, optionDesc, optionName, OPTIONS, rewardAt, successChance,
+  foreseen, newGame, optionCost, optionDesc, optionName, OPTIONS, reveal, rewardAt, successChance,
   type AutoPlayMode, type ChallengeOutcome, type GameState, type OptionId,
 } from "../game";
 import { mountAccount, reportStage } from "./account";
@@ -111,6 +111,7 @@ const renderOwned = (): void => {
     m.guaranteed > 0 && `확정 성공 ${m.guaranteed}회 남음`,
     m.focusLeft > 0 && `집중 ${m.focusLeft}회 남음`,
     m.lives > 0 && `부활 ${m.lives}회 남음`,
+    m.anchors > 0 && `발판 ${m.anchors}회 남음`,
   ].filter(Boolean).join(", ");
   if (extra) items.push(el("li", extra, "extra"));
   $("owned").replaceChildren(...(items.length ? items : [el("li", "없음", "empty")]));
@@ -121,7 +122,9 @@ const renderAdvice = (): void => {
   box.replaceChildren();
   if (game.offer) { box.textContent = "옵션을 고르세요."; return; }
   if (game.stage >= MAX_STAGE) { box.textContent = "마지막 단계. 상금을 받으세요."; return; }
-  if (game.stage === 0) { box.textContent = "도전해서 1단계부터."; return; }
+  const sure = foreseen(game);
+  if (sure !== null) box.append(el("span", sure ? "예지 : 다음 도전 성공" : "예지 : 다음 도전 실패", `fore ${sure ? "up" : "down"}`));
+  if (game.stage === 0) { box.append("도전해서 1단계부터."); return; }
   const gain = continueGain(game);
   box.append(
     el("span", gain >= 0 ? "도전 유리" : "받기 유리", gain >= 0 ? "up" : "down"),
@@ -171,7 +174,8 @@ const describe = (o: ChallengeOutcome): [string, "ok" | "bad", "win" | "lose"] =
     case "dodged": return [`실패했지만 행운으로 없던 일. ${to}단계 유지`, "ok", "win"];
     case "revived": return [`실패했지만 부활. ${to}단계 유지, 상금 줄어듦`, "bad", "lose"];
     case "softened": return [`실패. 안전장치로 ${to}단계까지만 떨어짐`, "bad", "lose"];
-    case "failed": return [`실패. ${o.from} → 0단계${o.payout > 0 ? `, 보상 ${won(o.payout)} 받음` : ", 옵션 모두 사라짐"}`, "bad", "lose"];
+    case "anchored": return [`실패. 발판으로 ${o.from} → ${to}단계, 다른 옵션은 사라짐`, "bad", "lose"];
+    case "failed": return [`실패. ${o.from} → 0단계, 옵션 모두 사라짐`, "bad", "lose"];
   }
 };
 
@@ -185,9 +189,8 @@ const record = (stage: number, payout: number): void => {
 const doChallenge = (): void => {
   if (game.offer || game.stage >= MAX_STAGE) return;
   const out = challenge(game, Math.random);
-  game = out.state;
+  game = reveal(out.state, Math.random);
   stats.tries += 1;
-  stats.banked += out.payout;
   stats.max = Math.max(stats.max, game.stage);
   const [text, tone, motion] = describe(out);
   feedback(text, tone, motion);
@@ -204,7 +207,7 @@ const doCashOut = (): void => {
   record(stage, payout);
 };
 const pick = (id: OptionId): void => {
-  game = chooseOption(game, id);
+  game = reveal(chooseOption(game, id), Math.random);
   stats.max = Math.max(stats.max, game.stage);
   feedback(`옵션 선택 : ${optionName(id)}`, "");
   render();

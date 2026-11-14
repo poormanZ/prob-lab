@@ -4,7 +4,7 @@ import { grantOption, MAX_STACKS, MAX_STAGE, newGame, rewardAt, type GameState }
 // The game runs in the browser, so the server can only reject records no legal run could produce.
 const maxedRewardState = ((): GameState => {
   let s = newGame();
-  for (const id of ["D1", "D2", "D3", "D4"] as const) for (let i = 0; i < MAX_STACKS; i += 1) s = grantOption(s, id);
+  for (const id of ["D1", "D2", "D3", "D4", "D6"] as const) for (let i = 0; i < MAX_STACKS; i += 1) s = grantOption(s, id);
   return s;
 })();
 // wins can outrun the stage when safety nets keep a run alive, so give it generous headroom.

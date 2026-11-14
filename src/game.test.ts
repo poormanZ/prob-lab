@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
-  autoPlayRun, baseStageTable, cashOut, challenge, chooseOption, continueGain, DEFAULT_TUNING, grantOption, MAX_STACKS,
-  MAX_STAGE, newGame, OPTION_IDS, rewardAt, successChance, type GameState, type Rng,
+  autoPlayRun, baseStageTable, cashOut, challenge, chooseOption, continueGain, DEFAULT_TUNING, foreseen, grantOption,
+  HIGH_STAGE_MIN, MAX_STACKS, MAX_STAGE, newGame, OPTION_IDS, reveal, rewardAt, successChance, type GameState, type Rng,
 } from "./game";
 
 const seq = (...values: number[]): Rng => {
@@ -87,13 +87,6 @@ describe("options", () => {
     expect(rewardAt(out.state, 3)).toBeLessThan(rewardAt(s, 3));
   });
 
-  it("insurance pays part of the reward on failure", () => {
-    const s = grantOption(climb(3), "C3");
-    const out = challenge(s, seq(LOSE, LOSE, LOSE), false);
-    expect(out.result).toBe("failed");
-    expect(out.payout).toBeCloseTo(400 * 0.1);
-  });
-
   it("cash out pays the current reward and resets", () => {
     const { state, payout } = cashOut(climb(4));
     expect(payout).toBe(800);
@@ -128,11 +121,40 @@ describe("added options", () => {
     expect(out.state.mods.rocket).toBe(0);
   });
 
-  it("refunds pay on a run-ending failure", () => {
-    const s = grantOption(grantOption(climb(3), "C5"), "C6");
-    const out = challenge(s, seq(LOSE, LOSE, LOSE), false);
-    expect(out.result).toBe("failed");
-    expect(out.payout).toBeCloseTo(DEFAULT_TUNING.C5 + 3 * DEFAULT_TUNING.C6);
+  it("a failure never pays: only a cash-out does", () => {
+    for (const id of OPTION_IDS) {
+      const out = challenge(grantOption(climb(3), id), seq(LOSE), false);
+      if (out.result === "failed") expect(out.payout).toBe(0);
+    }
+  });
+
+  it("anchor catches one failure partway down but drops the other options", () => {
+    const s = grantOption(grantOption(grantOption(climb(8), "C7"), "C7"), "D1");
+    const caught = challenge(s, seq(LOSE, LOSE, LOSE), false);
+    expect(caught.result).toBe("anchored");
+    expect(caught.state.stage).toBe(4);
+    expect(caught.state.stacks).toEqual({ C7: 1 });
+    expect(caught.state.mods.rewardMul).toBeCloseTo(1 - DEFAULT_TUNING.C7);
+    const again = challenge(caught.state, seq(LOSE, LOSE, LOSE), false);
+    expect(again.result).toBe(caught.state.stage > 1 ? "anchored" : "failed");
+  });
+
+  it("foresight, when it shows, reveals the roll the challenge then uses", () => {
+    const shownFail = reveal(grantOption(climb(3), "C8"), seq(0.99, 0));
+    expect(foreseen(shownFail)).toBe(false);
+    expect(continueGain(shownFail)).toBeLessThan(0);
+    expect(challenge(shownFail, seq(WIN, WIN, WIN), false).result).toBe("failed");
+    const shownWin = reveal(grantOption(climb(3), "C8"), seq(0.01, 0));
+    expect(foreseen(shownWin)).toBe(true);
+    expect(challenge(shownWin, seq(LOSE, LOSE), false).state.stage).toBe(4);
+    const hidden = reveal(grantOption(climb(3), "C8"), seq(0.01, 0.999));
+    expect(foreseen(hidden)).toBeNull();
+  });
+
+  it("high-stage bonus only pays from stage 7", () => {
+    const s = grantOption(newGame(), "D6");
+    expect(rewardAt(s, HIGH_STAGE_MIN - 1)).toBe(rewardAt(newGame(), HIGH_STAGE_MIN - 1));
+    expect(rewardAt(s, HIGH_STAGE_MIN)).toBeCloseTo(rewardAt(newGame(), HIGH_STAGE_MIN) * (1 + DEFAULT_TUNING.D6));
   });
 
   it("jackpot doubles the cash-out", () => {

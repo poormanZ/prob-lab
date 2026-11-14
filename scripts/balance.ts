@@ -32,10 +32,10 @@ const ev = (tuning: Tuning, mode: AutoPlayMode, runs = RUNS): number => {
 
 const RANGES: Partial<Record<OptionId, [number, number]>> = {
   A1: [0, 0.5], A2: [0, 0.03], A3: [0, 0.3], A4: [0, 0.03], A5: [0, 1], A6: [0, 0.3], A8: [0, 1],
-  B1: [0, 0.5], B2: [0, 1], B3: [0, 1], C1: [0, 1], C2: [0, 0.8], C3: [0, 0.8], C4: [0, 0.5], C5: [0, 1000], C6: [0, 500],
-  D1: [0, 1], D2: [0, 0.5], D3: [0, 1000], D4: [0, 500], D5: [0, 1],
+  B1: [0, 0.5], B2: [0, 1], B3: [0, 1], C1: [0, 1], C2: [0, 0.8], C4: [0, 0.5], C7: [0, 1], C8: [0, 1],
+  D1: [0, 1], D2: [0, 0.5], D3: [0, 1000], D4: [0, 500], D5: [0, 1], D6: [0, 3],
 };
-const DECREASING = new Set<OptionId>(["A5", "B2", "B3", "C1"]);
+const DECREASING = new Set<OptionId>(["A5", "B2", "B3", "C1", "C7"]);
 
 const base = ev(DEFAULT_TUNING, {});
 const effect = (tuning: Tuning, ids: OptionId[]): number => ev(tuning, { start: ids }) / base - 1;
@@ -54,7 +54,7 @@ for (const id of OPTION_IDS) {
 }
 
 // Round to values that read well in the UI.
-const ROUND: Partial<Record<OptionId, number>> = { A1: 0.005, A5: 0.01, A6: 0.005, A8: 0.01, B2: 0.01, B3: 0.01, C5: 5, C6: 5, D5: 0.01, A2: 0.001, A3: 0.01, A4: 0.001, B1: 0.01, C1: 0.05, C2: 0.01, C3: 0.01, C4: 0.01, D1: 0.01, D2: 0.01, D3: 10, D4: 5 };
+const ROUND: Partial<Record<OptionId, number>> = { A1: 0.005, A5: 0.01, A6: 0.005, A8: 0.01, B2: 0.01, B3: 0.01, C7: 0.01, C8: 0.01, D5: 0.01, D6: 0.01, A2: 0.001, A3: 0.01, A4: 0.001, B1: 0.01, C1: 0.05, C2: 0.01, C4: 0.01, D1: 0.01, D2: 0.01, D3: 10, D4: 5 };
 for (const id of OPTION_IDS) {
   const step = ROUND[id];
   if (step) tuning[id] = Math.max(step, Math.round(tuning[id] / step) * step);
