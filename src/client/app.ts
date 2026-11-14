@@ -33,14 +33,17 @@ const effectOf = new Map(report.rows.map((r) => [r.id as OptionId, r]));
 const table = baseStageTable();
 const best = table.reduce((a, b) => (b.expectedValue > a.expectedValue ? b : a));
 
-const optionCard = (id: OptionId, tag: "button" | "div"): HTMLElement => {
+const optionCard = (id: OptionId, key: number): HTMLButtonElement => {
   const def = OPTIONS[id];
-  const card = el(tag, "", `card g-${def.group}`);
+  const card = el("button", "", `card g-${def.group}`) as HTMLButtonElement;
   const head = el("div", "", "head");
-  head.append(el("span", def.group, "grp"), el("span", `밸런스 ${rankOf.get(id)}위`));
-  card.append(head, el("span", optionName(id), "name"), el("span", optionDesc(id), "desc"));
+  const n = game.stacks[id] ?? 0;
+  head.append(el("span", def.group, "grp"), el("span", optionName(id), "name"), el("span", n ? `${n + 1}/${MAX_STACKS}` : "", "lv"), el("kbd", String(key)));
+  card.append(head, el("span", optionDesc(id), "desc"));
   const cost = optionCost(id);
   if (cost) card.append(el("span", `대신 ${cost}`, "cost"));
+  const now = preview(game, id);
+  if (now) card.append(el("span", now, "now"));
   return card;
 };
 
@@ -49,12 +52,12 @@ const preview = (s: GameState, id: OptionId): string => {
   const before = { ...s, offer: null };
   const after = grantOption(before, id);
   const parts: string[] = [];
-  if (after.stage !== before.stage) parts.push(`단계 ${before.stage} → ${after.stage}`);
+  if (after.stage !== before.stage) parts.push(`단계 ${before.stage}→${after.stage}`);
   const pb = successChance(before), pa = successChance(after);
-  if (Math.abs(pa - pb) > 1e-9) parts.push(`다음 성공확률 ${pct(pb)} → ${pct(pa)}`);
+  if (Math.abs(pa - pb) > 1e-9) parts.push(`성공 ${pct(pb)}→${pct(pa)}`);
   const rb = rewardAt(before, before.stage), ra = rewardAt(after, after.stage);
-  if (Math.abs(ra - rb) > 0.5) parts.push(`지금 상금 ${won(rb)} → ${won(ra)}`);
-  return parts.join(", ");
+  if (Math.abs(ra - rb) > 0.5) parts.push(`상금 ${wonShort(rb)}→${won(ra)}`);
+  return parts.join(" / ");
 };
 
 let game: GameState = newGame();
@@ -74,24 +77,25 @@ const renderLadder = (): void => {
     return li;
   });
   $("ladder").replaceChildren(...rungs);
+  // On phones the ladder is a horizontal strip; keep the current rung in view.
+  const cur = $("ladder").querySelector<HTMLElement>(".cur, .next");
+  if (cur && matchMedia("(max-width: 640px)").matches) cur.scrollIntoView({ block: "nearest", inline: "center" });
 };
 
+let offerShown = false;
 const renderOffer = (): void => {
   const offer = game.offer;
-  $("offer").hidden = !offer;
-  $("actions").hidden = Boolean(offer);
-  if (!offer) return;
-  $("offerList").replaceChildren(...offer.map((id, i) => {
-    const card = optionCard(id, "button");
-    const now = preview(game, id);
-    card.insertBefore(el("span", now ? `지금 고르면 : ${now}` : "나중에 성공·실패할 때 효과가 남", "now"), null);
-    const foot = el("div", "", "foot");
-    const n = game.stacks[id] ?? 0;
-    foot.append(el("span", `${"●".repeat(n)}${"○".repeat(MAX_STACKS - n)} 보유 ${n}/${MAX_STACKS}`, "dots"), el("span", `${i + 1}번`));
-    card.append(foot);
+  const sheet = $("offer");
+  sheet.hidden = !offer;
+  document.body.classList.toggle("locked", Boolean(offer));
+  if (!offer) { offerShown = false; return; }
+  const cards = offer.map((id, i) => {
+    const card = optionCard(id, i + 1);
     card.onclick = () => pick(id);
     return card;
-  }));
+  });
+  $("offerList").replaceChildren(...cards);
+  if (!offerShown) { offerShown = true; cards[0]?.focus({ preventScroll: true }); }
 };
 
 const renderOwned = (): void => {
@@ -109,20 +113,19 @@ const renderOwned = (): void => {
     m.lives > 0 && `부활 ${m.lives}회 남음`,
   ].filter(Boolean).join(", ");
   if (extra) items.push(el("li", extra, "extra"));
-  $("owned").replaceChildren(...(items.length ? items : [el("li", "성공하면 옵션을 고를 수 있습니다.", "empty")]));
+  $("owned").replaceChildren(...(items.length ? items : [el("li", "없음", "empty")]));
 };
 
 const renderAdvice = (): void => {
   const box = $("advice");
   box.replaceChildren();
-  if (game.offer) { box.textContent = "옵션을 먼저 고르세요."; return; }
-  if (game.stage >= MAX_STAGE) { box.textContent = "마지막 단계입니다. 상금을 받으세요."; return; }
-  if (game.stage === 0) { box.textContent = "0단계에서는 받을 상금이 없습니다. 도전하세요."; return; }
+  if (game.offer) { box.textContent = "옵션을 고르세요."; return; }
+  if (game.stage >= MAX_STAGE) { box.textContent = "마지막 단계. 상금을 받으세요."; return; }
+  if (game.stage === 0) { box.textContent = "도전해서 1단계부터."; return; }
   const gain = continueGain(game);
   box.append(
-    "한 번 더 도전하면 평균 ",
-    el("span", gain >= 0 ? `+${won(gain)} 이득` : `${won(gain)} 손해`, gain >= 0 ? "up" : "down"),
-    gain >= 0 ? ". 도전이 유리합니다." : ". 지금 받는 게 유리합니다.",
+    el("span", gain >= 0 ? "도전 유리" : "받기 유리", gain >= 0 ? "up" : "down"),
+    ` (도전 시 평균 ${gain >= 0 ? "+" : ""}${won(gain)})`,
   );
 };
 
@@ -239,19 +242,20 @@ for (const tab of tabs) {
   };
 }
 
+// Compact list only; the full explanation of each option lives in docs/guide.md.
 const renderGuide = (): void => {
-  $("summary").textContent =
-    `옵션을 고르며 진행하면 판당 기대값이 옵션 없을 때(${won(report.base)})의 약 ${((report.fullRandom + report.fullGreedy) / 2).toFixed(1)}배가 됩니다.`;
-  $("balanceNote").textContent =
-    `${priority.length}개 옵션은 ${MAX_STACKS}번 쌓였을 때 효과가 모두 약 +${Math.round(report.target * 100)}%가 되도록 맞췄습니다. ` +
-    `효과 = 0단계에서 그 옵션을 갖고 시작할 때 판당 기대값 증가율. ${report.runs.toLocaleString("ko-KR")}판 시뮬레이션 결과입니다.`;
+  $("summary").textContent = `${priority.length}개 옵션, 순위순. 오른쪽 숫자는 ${MAX_STACKS}개 쌓았을 때 기대값 변화.`;
   $("guide").replaceChildren(...priority.map((id) => {
-    const card = optionCard(id, "div");
-    const row = effectOf.get(id)!;
-    const fx = el("div", "", "effect");
-    fx.append(el("span", "1개 "), el("b", effect(row.one)), el("span", "3개 "), el("b", effect(row.three)));
-    card.append(fx);
-    return card;
+    const def = OPTIONS[id];
+    const li = el("li", "", `g-${def.group}`);
+    const cost = optionCost(id);
+    li.append(
+      el("b", String(rankOf.get(id)), "rk"),
+      el("span", optionName(id), "name"),
+      el("span", cost ? `${optionDesc(id)}, 대신 ${cost}` : optionDesc(id), "desc"),
+      el("span", effect(effectOf.get(id)!.three), "fx"),
+    );
+    return li;
   }));
 };
 
@@ -259,7 +263,7 @@ const renderBaseTable = (): void => {
   $("rows").replaceChildren(...table.map((r) => {
     const tr = document.createElement("tr");
     if (r.stage === best.stage) tr.className = "best";
-    tr.append(el("td", String(r.stage)), el("td", r.stage ? pct(r.successRate, 2) : "-"), el("td", r.stage ? pct(r.failRate, 2) : "-"),
+    tr.append(el("td", String(r.stage)), el("td", r.stage ? pct(r.successRate, 1) : "-"),
       el("td", pct(r.reachProbability, 2)), el("td", won(r.reward)), el("td", won(r.expectedValue)));
     return tr;
   }));
@@ -284,9 +288,7 @@ $("simulate").onclick = () => {
     return box;
   };
   kv.replaceChildren(
-    add("반복", `${runs.toLocaleString("ko-KR")}판`),
-    add("판당 평균 상금", won(avg)),
-    add("옵션 없을 때 이론값", won(best.expectedValue)),
+    add("판당 평균", won(avg)),
     add("옵션 없을 때 대비", `${(avg / best.expectedValue).toFixed(2)}배`),
   );
   const top = reached.findLastIndex((c) => c > 0);
@@ -308,6 +310,7 @@ $("simulate").onclick = () => {
 };
 
 $("lastStage").textContent = String(MAX_STAGE);
+$<HTMLDetailsElement>("logBox").open = matchMedia("(min-width: 641px)").matches;
 renderGuide();
 renderBaseTable();
 render();
