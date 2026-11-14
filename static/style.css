@@ -264,3 +264,6 @@ tr.best td:first-child::after{content:" ★";color:var(--gold)}
   .btn.act{padding:10px 6px}
 }
 .reward strong.bad{color:var(--fail)}
+.duel .offer-list{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.guide li.chain .name::before{content:"↳ ";color:var(--muted)}
+@media (max-width:760px){.duel .offer-list{grid-template-columns:1fr}}

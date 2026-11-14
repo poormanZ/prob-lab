@@ -32,7 +32,7 @@ let stats = { runs: 1, best: 0, fulls: 0 };
 
 const startPos = (s: DuelState, stage: number) => {
   const kit = kitOf(s.stacks);
-  return { h: kit.maxHp, e: enemyAt(stage).hp, mc: kit.preheat ? 1 : 0, ec: 0, r: s.pos.r };
+  return { h: kit.maxHp, e: enemyAt(stage).hp, mc: kit.preheat ? 1 : 0, ec: 0, cb: 0, r: s.pos.r };
 };
 const solver = () => solverFor(game.stacks, game.stage);
 
@@ -71,7 +71,8 @@ const renderFighters = (): void => {
   const live = s.status === "fight";
   const charged = live && s.pos.mc > 0;
   const foeCharged = live && s.pos.ec > 0;
-  const myAtk = kit.atk * (charged ? 1 + kit.chargePower : 1);
+  const combo = live ? s.pos.cb * kit.combo : 0;
+  const myAtk = (kit.atk + combo) * (charged ? 1 + kit.chargePower : 1);
   const me = $("me");
   me.replaceChildren(
     el("h3", "나"),
@@ -79,6 +80,7 @@ const renderFighters = (): void => {
     el("p", `공격 ${myAtk}${charged ? ` (×${1 + kit.chargePower})` : ""} · 방어 ${kit.def}`, "st"),
   );
   if (charged) me.append(el("span", "충전됨", "badge"));
+  if (combo) me.append(el("span", `연타 +${combo}`, "badge warn"));
   if (s.pos.r > 0) me.append(el("span", `부활 ${s.pos.r}`, "badge soft"));
   me.classList.toggle("charged", charged);
 
@@ -127,7 +129,7 @@ const optionCard = (id: DuelOptionId, key: number): HTMLButtonElement => {
   const card = el("button", "", `card g-${def.group}`) as HTMLButtonElement;
   const head = el("div", "", "head");
   const n = game.stacks[id] ?? 0;
-  head.append(el("span", def.group, "grp"), el("span", duelOptionName(id), "name"), el("span", n ? `${n + 1}${def.max < 99 ? `/${def.max}` : "개째"}` : "", "lv"), el("kbd", String(key)));
+  head.append(el("span", def.requires ? `연쇄 · ${duelOptionName(def.requires)}` : def.group, "grp"), el("span", duelOptionName(id), "name"), el("span", n ? `${n + 1}${def.max < 99 ? `/${def.max}` : "개째"}` : "", "lv"), el("kbd", String(key)));
   card.append(head, el("span", duelOptionDesc(id), "desc"));
   const before = nextClearWith(game, null), after = nextClearWith(game, id);
   card.append(el("span", `다음 스테이지 ${pct(before, 1)} → ${pct(after, 1)}`, "now"));
@@ -185,7 +187,7 @@ const describe = (t: TurnResult, before: DuelState): [string, "ok" | "bad" | ""]
   if (t.dodged) parts.push("회피!");
   if (t.taken) parts.push(`내 체력 −${t.taken}`);
   if (t.revived) parts.push("부활로 버팀");
-  if (t.countered) parts.push(`반격 ${t.countered}`);
+  if (t.countered) parts.push(`되돌린 피해 ${t.countered}`);
   if (t.dealt - t.countered > 0) parts.push(`상대 체력 −${t.dealt - t.countered}`);
   else if (t.mine === "attack" && t.theirs === "defend") parts.push("막힘");
   if (!t.end && t.state.pos.mc && t.mine === "charge") parts.push("충전");
@@ -234,10 +236,10 @@ $("reset").onclick = () => {
 document.addEventListener("keydown", (e) => {
   const target = e.target as HTMLElement;
   if (target.closest("input, select, textarea") || e.metaKey || e.ctrlKey || e.altKey) return;
-  if (/^[1-3]$/.test(e.key)) {
+  if (/^[1-5]$/.test(e.key)) {
     const i = Number(e.key) - 1;
     if (game.status === "offer") { const id = game.offer?.[i]; if (id) pick(id); }
-    else doAct(ACTIONS[i]);
+    else if (i < ACTIONS.length) doAct(ACTIONS[i]);
   } else if (e.key === "r" || e.key === "R") restart();
 });
 
@@ -253,12 +255,12 @@ for (const tab of tabs) {
 }
 
 const renderGuide = (): void => {
-  $("summary").textContent = `${priority.length}개 옵션, 순위순. 오른쪽 숫자 : 이 옵션을 먼저 고를 때 평균 클리어 스테이지 수 변화 (랜덤 대비).`;
+  $("summary").textContent = `${priority.length}개 옵션. 연쇄 옵션은 앞 옵션이 있어야 나오고, 앞 옵션 바로 아래에 둠. 오른쪽 숫자 : 이 옵션을 먼저 고를 때 평균 클리어 스테이지 수 변화 (다음 스테이지 확률 최대로 고르기 대비).`;
   $("guide").replaceChildren(...priority.map((id) => {
     const row = rowOf.get(id)!;
     const def = DUEL_OPTIONS[id];
-    const li = el("li", "", `g-${def.group}`);
-    const cap = def.max < 99 ? ` (최대 ${def.max})` : "";
+    const li = el("li", "", `g-${def.group}${def.requires ? " chain" : ""}`);
+    const cap = `${def.requires ? ` [${duelOptionName(def.requires)} 필요]` : ""}${def.max < 99 ? ` (최대 ${def.max})` : ""}`;
     li.append(el("b", String(row.rank), "rk"), el("span", duelOptionName(id), "name"), el("span", `${duelOptionDesc(id)}${cap}`, "desc"), el("span", signed(row.diff), `fx ${row.diff < 0 ? "neg" : ""}`));
     return li;
   }));

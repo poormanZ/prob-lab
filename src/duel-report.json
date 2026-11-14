@@ -1,113 +1,239 @@
 {
   "runs": 3000,
+  "enemy": {
+    "hp": 0.5,
+    "atk": 0.3333333333333333,
+    "def": 0.25,
+    "hp2": 0.1,
+    "atk2": 0.03,
+    "def2": 0.03
+  },
   "base": {
     "none": {
-      "avg": 2.14,
+      "avg": 2.05,
       "full": 0
     },
     "random": {
-      "avg": 4.19,
-      "full": 0.027
+      "avg": 2.68,
+      "full": 0
     },
     "priority": {
-      "avg": 9.73,
-      "full": 0.307
+      "avg": 3.82,
+      "full": 0.0153
     },
     "greedy": {
-      "avg": 8.94,
-      "full": 0.2313
+      "avg": 3.82,
+      "full": 0.0047
     }
   },
   "rows": [
     {
-      "id": "A1",
-      "name": "선제",
-      "avg": 4.86,
-      "diff": 0.67
-    },
-    {
-      "id": "D3",
-      "name": "부활",
-      "avg": 4.68,
-      "diff": 0.49
-    },
-    {
       "id": "S2",
       "name": "공격력",
-      "avg": 4.6,
-      "diff": 0.41
+      "requires": null,
+      "avg": 4.02,
+      "diff": 0.2,
+      "chainGain": null
     },
     {
-      "id": "S1",
-      "name": "체력",
-      "avg": 4.56,
-      "diff": 0.37
-    },
-    {
-      "id": "D4",
-      "name": "위압",
-      "avg": 4.54,
-      "diff": 0.35
+      "id": "A1",
+      "name": "선제",
+      "requires": null,
+      "avg": 3.89,
+      "diff": 0.07,
+      "chainGain": null
     },
     {
       "id": "C3",
       "name": "예열",
-      "avg": 4.43,
-      "diff": 0.24
+      "requires": null,
+      "avg": 3.87,
+      "diff": 0.05,
+      "chainGain": null
     },
     {
-      "id": "D2",
-      "name": "회피",
-      "avg": 4.16,
-      "diff": -0.03
+      "id": "D3",
+      "name": "부활",
+      "requires": null,
+      "avg": 3.81,
+      "diff": -0.01,
+      "chainGain": null
     },
     {
-      "id": "D1",
-      "name": "반격",
-      "avg": 3.99,
-      "diff": -0.2
+      "id": "X2",
+      "name": "불사조",
+      "requires": "D3",
+      "avg": 3.74,
+      "diff": -0.08,
+      "chainGain": -0.07
+    },
+    {
+      "id": "S4",
+      "name": "단련",
+      "requires": null,
+      "avg": 3.73,
+      "diff": -0.09,
+      "chainGain": null
+    },
+    {
+      "id": "D4",
+      "name": "위압",
+      "requires": null,
+      "avg": 3.67,
+      "diff": -0.15,
+      "chainGain": null
     },
     {
       "id": "C1",
       "name": "강충전",
-      "avg": 3.98,
-      "diff": -0.21
+      "requires": null,
+      "avg": 3.67,
+      "diff": -0.15,
+      "chainGain": null
+    },
+    {
+      "id": "X5",
+      "name": "충전 관통",
+      "requires": "C1",
+      "avg": 3.5,
+      "diff": -0.32,
+      "chainGain": -0.17
+    },
+    {
+      "id": "S1",
+      "name": "체력",
+      "requires": null,
+      "avg": 3.65,
+      "diff": -0.17,
+      "chainGain": null
+    },
+    {
+      "id": "D2",
+      "name": "회피",
+      "requires": null,
+      "avg": 3.59,
+      "diff": -0.23,
+      "chainGain": null
+    },
+    {
+      "id": "X1",
+      "name": "잔상",
+      "requires": "D2",
+      "avg": 3.65,
+      "diff": -0.17,
+      "chainGain": 0.06
     },
     {
       "id": "C2",
       "name": "충전 방어",
-      "avg": 3.92,
-      "diff": -0.27
+      "requires": null,
+      "avg": 3.58,
+      "diff": -0.24,
+      "chainGain": null
     },
     {
-      "id": "C4",
-      "name": "기 흡수",
-      "avg": 3.92,
-      "diff": -0.27
+      "id": "D1",
+      "name": "반격",
+      "requires": null,
+      "avg": 3.56,
+      "diff": -0.26,
+      "chainGain": null
+    },
+    {
+      "id": "X3",
+      "name": "역습",
+      "requires": "D1",
+      "avg": 3.54,
+      "diff": -0.28,
+      "chainGain": -0.02
+    },
+    {
+      "id": "D5",
+      "name": "가시",
+      "requires": null,
+      "avg": 3.54,
+      "diff": -0.28,
+      "chainGain": null
     },
     {
       "id": "E1",
       "name": "간파",
-      "avg": 3.9,
-      "diff": -0.29
+      "requires": null,
+      "avg": 3.54,
+      "diff": -0.28,
+      "chainGain": null
     },
     {
-      "id": "S3",
-      "name": "방어력",
-      "avg": 3.82,
-      "diff": -0.37
+      "id": "X6",
+      "name": "통찰",
+      "requires": "E1",
+      "avg": 3.51,
+      "diff": -0.31,
+      "chainGain": -0.03
     },
     {
       "id": "A3",
       "name": "빈틈",
-      "avg": 3.82,
-      "diff": -0.37
+      "requires": null,
+      "avg": 3.53,
+      "diff": -0.29,
+      "chainGain": null
+    },
+    {
+      "id": "C4",
+      "name": "기 흡수",
+      "requires": null,
+      "avg": 3.53,
+      "diff": -0.29,
+      "chainGain": null
     },
     {
       "id": "A2",
       "name": "관통",
-      "avg": 3.62,
-      "diff": -0.57
+      "requires": null,
+      "avg": 3.52,
+      "diff": -0.3,
+      "chainGain": null
+    },
+    {
+      "id": "S3",
+      "name": "방어력",
+      "requires": null,
+      "avg": 3.5,
+      "diff": -0.32,
+      "chainGain": null
+    },
+    {
+      "id": "X4",
+      "name": "철벽",
+      "requires": "S3",
+      "avg": 3.46,
+      "diff": -0.36,
+      "chainGain": -0.04
+    },
+    {
+      "id": "A4",
+      "name": "연타",
+      "requires": null,
+      "avg": 3.48,
+      "diff": -0.34,
+      "chainGain": null
+    },
+    {
+      "id": "X7",
+      "name": "연쇄",
+      "requires": "A4",
+      "avg": 3.45,
+      "diff": -0.37,
+      "chainGain": -0.03
+    },
+    {
+      "id": "E2",
+      "name": "전리품",
+      "requires": null,
+      "avg": 3.35,
+      "diff": -0.47,
+      "chainGain": null
     }
   ]
 }

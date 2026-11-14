@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
-  act, autoDuel, choose, drawOffer, DUEL_OPTIONS, DUEL_OPTION_IDS, enemyAt, enemyTable, kitOf, LAST_STAGE, newDuel,
+  act, autoDuel, choose, drawOffer, DUEL_OPTIONS, DUEL_OPTION_IDS, enemyAt, enemyTable, isOfferable, kitOf, LAST_STAGE, newDuel,
   resolve, solveStage, startStage, type Action, type DuelState, type Pos, type Stacks,
 } from "./duel";
 
 const seq = (...xs: number[]) => { let i = 0; return () => xs[i++ % xs.length]; };
-const pos = (p: Partial<Pos> = {}): Pos => ({ h: 1, e: 1, mc: 0, ec: 0, r: 0, ...p });
+const pos = (p: Partial<Pos> = {}): Pos => ({ h: 1, e: 1, mc: 0, ec: 0, cb: 0, r: 0, ...p });
 const only = (stacks: Stacks, foe: { hp: number; atk: number; def: number }, p: Pos, a: Action, b: Action) => {
   const out = resolve(kitOf(stacks), foe, p, a, b);
   expect(out).toHaveLength(1);
@@ -66,6 +66,55 @@ describe("turn rules", () => {
   });
 });
 
+describe("new and chain options", () => {
+  it("연타 adds damage per landed hit and resets when blocked; 연쇄 doubles it", () => {
+    const hit = only({ A4: 1 }, foe(1), pos({ e: 9, cb: 2 }), "attack", "charge");
+    expect(hit.dealt).toBe(1 + 2);
+    expect(hit.pos.cb).toBe(3);
+    expect(only({ A4: 1 }, foe(1, 5), pos({ e: 9, cb: 2 }), "attack", "defend").pos.cb).toBe(0);
+    expect(only({ A4: 1, X7: 1 }, foe(1), pos({ e: 9, cb: 2 }), "attack", "charge").dealt).toBe(1 + 4);
+    expect(only({ A4: 1 }, foe(1), pos({ e: 9, cb: 2 }), "defend", "defend").pos.cb).toBe(0);
+  });
+
+  it("가시 hurts the enemy whenever I am hit and survive", () => {
+    const o = only({ S1: 3, D5: 2 }, foe(1), pos({ h: 4, e: 5 }), "charge", "attack");
+    expect(o.taken).toBe(1);
+    expect(o.pos.e).toBe(3);
+  });
+
+  it("철벽 charges me after a full block", () => {
+    expect(only({ S3: 1, X4: 1 }, foe(2), pos({ e: 5 }), "defend", "attack").pos.mc).toBe(1);
+    expect(only({ S3: 1 }, foe(2), pos({ e: 5 }), "defend", "attack").pos.mc).toBe(0);
+  });
+
+  it("불사조 revives at full health and charged", () => {
+    const o = only({ S1: 3, D3: 1, X2: 1 }, foe(9), pos({ h: 4, e: 5, r: 1 }), "charge", "attack");
+    expect(o).toMatchObject({ revived: true, pos: { h: 4, mc: 1, r: 0 } });
+  });
+
+  it("통찰 doubles an attack only on a turn 간파 revealed", () => {
+    const kit = kitOf({ E1: 1, X6: 1 });
+    expect(resolve(kit, foe(0), pos({ e: 9 }), "attack", "charge", true)[0].dealt).toBe(2);
+    expect(resolve(kit, foe(0), pos({ e: 9 }), "attack", "charge", false)[0].dealt).toBe(1);
+  });
+
+  it("단련 doubles every stat option, including ones already owned", () => {
+    expect(kitOf({ S1: 2, S2: 1, S4: 1 })).toMatchObject({ maxHp: 5, atk: 3, def: 1 });
+  });
+
+  it("chain options appear only after their base option", () => {
+    expect(isOfferable("X1", {})).toBe(false);
+    expect(isOfferable("X1", { D2: 1 })).toBe(true);
+    expect(isOfferable("X1", { D2: 1, X1: 1 })).toBe(false);
+    for (let i = 0; i < 50; i += 1) expect(drawOffer({}, Math.random).some((id) => DUEL_OPTIONS[id].requires)).toBe(false);
+  });
+
+  it("전리품 shows more options", () => {
+    expect(drawOffer({ E2: 1 }, Math.random)).toHaveLength(4);
+    expect(drawOffer({ E2: 2 }, Math.random)).toHaveLength(5);
+  });
+});
+
 describe("solver", () => {
   it("matches the hand result for the base kit: 2/3 when every move risks a 1/3 lethal attack", () => {
     const v = solveStage(kitOf({}), foe(1, 0, 1)).value(pos());
@@ -104,7 +153,7 @@ describe("run flow", () => {
     const s = newDuel(Math.random);
     expect(s).toMatchObject({ stage: 0, status: "fight", pos: { h: 1, e: 1 } });
     expect(enemyAt(0)).toEqual({ hp: 1, atk: 0, def: 0 });
-    expect(enemyAt(LAST_STAGE)).toEqual({ hp: 11, atk: 7, def: 5 });
+    expect(enemyAt(LAST_STAGE)).toEqual({ hp: 51, atk: 19, def: 17 });
   });
 
   it("plays the pre-drawn enemy move, so 간파 shows the truth", () => {
