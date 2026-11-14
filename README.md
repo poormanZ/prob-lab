@@ -15,6 +15,7 @@
 * 공격·방어·충전 중 하나를 고르면 상대도 셋 중 하나를 무작위로 고름
 * 나는 체력 1, 공격 1, 방어 1로 시작. 상대는 스테이지마다 강해짐 (0~20스테이지)
 * 스테이지를 깰 때마다 옵션 3개 중 1개를 고름
+* 랭킹 : 클리어한 스테이지 수 순 → 같으면 그 판의 턴 수가 적은 순 (`/ranking?game=duel`)
 * 자세한 규칙·옵션·측정 결과 : [`docs/duel.md`](docs/duel.md)
 
 ## 구조
@@ -25,6 +26,7 @@
 * `src/index.ts` : Worker 진입점. `/api/*`, `/auth/*` 처리, 나머지는 정적 파일
 * `src/auth.ts`, `src/kakao.ts` : 카카오 로그인 → 세션 → 아이디 만들기
 * `src/records.ts` : 유저별 최고 기록 저장, 랭킹 조회
+* `src/duel-records.ts` : 대결 최고 기록 저장(`/api/duel/records`), 대결 랭킹 조회(`/api/duel/ranking`)
 * `src/client/account.ts` : 로그인 바, 기록 전송 (게임·랭킹 페이지 공용)
 * `static/ranking.html` + `src/client/ranking.ts` : `/ranking` 페이지
 * `migrations/` : D1(Cloudflare SQLite DB) 테이블

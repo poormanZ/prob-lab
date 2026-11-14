@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { LAST_STAGE } from "./duel";
 import { MAX_STAGE } from "./game";
 import worker, { type Env } from "./index";
 import { maxAmountAt } from "./records";
@@ -131,5 +132,48 @@ describe("records and ranking", () => {
     expect(data.ranking.find((r) => r.me)?.username).toBe("alpha");
     expect(data.me.rank).toBe(3);
     expect(JSON.stringify(data)).not.toMatch(/kakao|user_id/);
+  });
+});
+
+describe("duel records and ranking", () => {
+  const duel = (sid: string | undefined, cleared: number, turns: number) => send("/api/duel/records", "POST", { cleared, turns }, sid);
+
+  it("requires login and a username", async () => {
+    expect((await duel(undefined, 3, 10)).status).toBe(401);
+    expect((await duel(await login(), 3, 10)).status).toBe(409);
+  });
+
+  it("keeps more stages cleared, then fewer turns", async () => {
+    const sid = await signUp("duelist");
+    const save = async (c: number, t: number) => (await duel(sid, c, t)).json();
+    expect(await save(5, 30)).toMatchObject({ updated: true, best: { best_cleared: 5, best_turns: 30 } });
+    expect(await save(4, 5)).toMatchObject({ updated: false, best: { best_cleared: 5 } });
+    expect(await save(5, 31)).toMatchObject({ updated: false, best: { best_turns: 30 } });
+    expect(await save(5, 22)).toMatchObject({ updated: true, best: { best_turns: 22 } });
+    expect(await save(6, 90)).toMatchObject({ updated: true, best: { best_cleared: 6, best_turns: 90 } });
+    expect(await (await call("/api/me", { sid })).json()).toMatchObject({ duelBest: { best_cleared: 6, best_turns: 90 } });
+  });
+
+  it("rejects impossible runs", async () => {
+    const sid = await signUp("duelcheat");
+    for (const [c, t] of [[0, 5], [LAST_STAGE + 2, 50], [5, 4], [2.5, 9], [5, 1.5]]) expect((await duel(sid, c, t)).status).toBe(400);
+  });
+
+  it("ranks by stages cleared, then fewer turns, and marks the viewer", async () => {
+    const a = await signUp("d_alpha"), b = await signUp("d_bravo"), c = await signUp("d_charlie");
+    await duel(a, 8, 40);
+    await duel(b, 8, 25);
+    await duel(c, 9, 99);
+    const data = await (await call("/api/duel/ranking", { sid: a })).json() as { total: number; ranking: { username: string; rank: number; me: boolean }[]; me: { rank: number } };
+    expect(data.ranking.map((r) => [r.rank, r.username])).toEqual([[1, "d_charlie"], [2, "d_bravo"], [3, "d_alpha"]]);
+    expect(data.me.rank).toBe(3);
+    expect(JSON.stringify(data)).not.toMatch(/kakao|user_id/);
+  });
+
+  it("keeps the two rankings separate", async () => {
+    const sid = await signUp("solo");
+    await duel(sid, 3, 9);
+    expect((await (await call("/api/ranking")).json() as { total: number }).total).toBe(0);
+    expect((await (await call("/api/duel/ranking")).json() as { total: number }).total).toBe(1);
   });
 });

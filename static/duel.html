@@ -11,9 +11,10 @@
 <header class="top">
   <div class="top-row">
     <h1>공격·방어·충전 대결 실험</h1>
-    <nav class="nav"><a href="/">연속 도전</a> <a href="/ranking">랭킹</a></nav>
+    <nav class="nav"><a href="/">연속 도전</a> <a href="/ranking?game=duel">랭킹</a></nav>
   </div>
   <p>상대도 셋 중 하나를 무작위로 고릅니다. 0~20스테이지를 버텨 보세요. <a class="doc-link" href="https://github.com/poormanZ/prob-lab/blob/main/docs/duel.md" target="_blank" rel="noopener">자세한 규칙</a></p>
+  <div id="account" class="account-slot"></div>
 </header>
 
 <main class="board">
@@ -25,7 +26,7 @@
   <section class="play" aria-live="polite">
     <div class="status" id="status">
       <div class="stage-num"><span id="stage">0</span><small>스테이지</small></div>
-      <div class="reward"><span>이번 스테이지 클리어 확률</span><strong id="clearNow"></strong></div>
+      <div class="reward"><span>이번 스테이지 클리어 확률</span><strong id="clearNow"></strong><small class="turns" id="turns"></small></div>
     </div>
 
     <div class="fighters">

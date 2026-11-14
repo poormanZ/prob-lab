@@ -3,6 +3,7 @@ import {
 } from "./auth";
 import { getCookie, isSameOrigin, json, randomHex, readJson, redirect } from "./http";
 import { authorizeUrl, fetchKakaoUserId, getOrCreateUserId, KakaoAuthError, type KakaoEnv } from "./kakao";
+import { getDuelBest, getDuelRanking, parseDuelRecord, saveDuelRecord } from "./duel-records";
 import { getRanking, parseRecord, saveRecord } from "./records";
 
 export interface Env extends KakaoEnv {
@@ -48,12 +49,13 @@ const api = async (request: Request, env: Env, url: URL, secure: boolean): Promi
   }
 
   if (pathname === "/api/ranking" && method === "GET") return json(await getRanking(env.DB, await currentUser(env.DB, request)));
+  if (pathname === "/api/duel/ranking" && method === "GET") return json(await getDuelRanking(env.DB, await currentUser(env.DB, request)));
 
   const user = pathname.startsWith("/api/") ? await currentUser(env.DB, request) : null;
   if (pathname === "/api/me" && method === "GET") {
     if (!user) return json({ error: "Unauthorized" }, 401);
     const best = await env.DB.prepare("SELECT best_stage, best_amount, achieved_at FROM records WHERE user_id = ?").bind(user.id).first();
-    return json({ user, best: best ?? null });
+    return json({ user, best: best ?? null, duelBest: await getDuelBest(env.DB, user.id) });
   }
   if (pathname === "/api/me/username" && method === "PUT") {
     if (!user) return json({ error: "Unauthorized" }, 401);
@@ -66,6 +68,13 @@ const api = async (request: Request, env: Env, url: URL, secure: boolean): Promi
     const record = parseRecord(await readJson(request));
     if (!record) return json({ error: "Invalid record" }, 400);
     return json(await saveRecord(env.DB, user.id, record));
+  }
+  if (pathname === "/api/duel/records" && method === "POST") {
+    if (!user) return json({ error: "Unauthorized" }, 401);
+    if (!user.username) return json({ error: "아이디를 먼저 만들어 주세요." }, 409);
+    const record = parseDuelRecord(await readJson(request));
+    if (!record) return json({ error: "Invalid record" }, 400);
+    return json(await saveDuelRecord(env.DB, user.id, record));
   }
   return null;
 };

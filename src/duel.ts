@@ -288,6 +288,7 @@ export const solveStage = (kit: Kit, foe: Fighter): StageSolver => {
 export type DuelStatus = "fight" | "offer" | "dead" | "clear";
 export interface DuelState {
   stage: number; stacks: Stacks; status: DuelStatus;
+  /** `turn` counts the whole run, not one stage; the duel ranking breaks ties with it. */
   pos: Pos; turn: number; offer: DuelOptionId[] | null;
   peek: Action; peekSeen: boolean;
 }
@@ -305,10 +306,10 @@ const withPeek = (s: DuelState, rng: () => number): DuelState => {
   return { ...s, peek, peekSeen: kit.peek > 0 && rng() < kit.peek };
 };
 
-export const startStage = (stage: number, stacks: Stacks, revives: number, rng: () => number): DuelState => {
+export const startStage = (stage: number, stacks: Stacks, revives: number, rng: () => number, turn = 0): DuelState => {
   const kit = kitOf(stacks);
   const pos: Pos = { h: kit.maxHp, e: enemyAt(stage).hp, mc: kit.preheat ? 1 : 0, ec: 0, cb: 0, r: revives };
-  return withPeek({ stage, stacks, status: "fight", pos, turn: 0, offer: null, peek: "attack", peekSeen: false }, rng);
+  return withPeek({ stage, stacks, status: "fight", pos, turn, offer: null, peek: "attack", peekSeen: false }, rng);
 };
 export const newDuel = (rng: () => number): DuelState => startStage(0, {}, 0, rng);
 export const visiblePeek = (s: DuelState): Action | null => (s.status === "fight" && s.peekSeen ? s.peek : null);
@@ -341,7 +342,7 @@ export const act = (s: DuelState, mine: Action, rng: () => number): TurnResult =
 export const choose = (s: DuelState, id: DuelOptionId, rng: () => number): DuelState => {
   if (s.status !== "offer" || !s.offer?.includes(id)) throw new Error("not offered");
   const stacks = { ...s.stacks, [id]: (s.stacks[id] ?? 0) + 1 };
-  return startStage(s.stage + 1, stacks, s.pos.r + (id === "D3" ? 1 : 0), rng);
+  return startStage(s.stage + 1, stacks, s.pos.r + (id === "D3" ? 1 : 0), rng, s.turn);
 };
 
 /** Stages cleared, 0 … LAST_STAGE + 1. */
@@ -397,7 +398,7 @@ export const autoDuel = (mode: AutoMode, rng: () => number): number => {
     if (s.status === "dead" || s.status === "clear") return clearedOf(s);
     if (s.status === "offer") {
       s = mode.chooser === "none"
-        ? startStage(s.stage + 1, s.stacks, s.pos.r, rng)
+        ? startStage(s.stage + 1, s.stacks, s.pos.r, rng, s.turn)
         : choose(s, pickOption(s, mode, rng), rng);
       continue;
     }

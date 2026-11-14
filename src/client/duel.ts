@@ -4,6 +4,7 @@ import {
   enemyTable, kitOf, LAST_STAGE, newDuel, nextClearWith, solverFor, visiblePeek,
   type Action, type AutoMode, type DuelOptionId, type DuelState, type TurnResult,
 } from "../duel";
+import { duelResultText, mountAccount, reportDuel } from "./account";
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string): T => {
   const node = document.getElementById(id);
@@ -112,12 +113,13 @@ const renderActions = (): void => {
   }
   $("clearNow").textContent = fighting ? pct(adv!.value, 1) : s.status === "dead" ? "패배" : "클리어";
   $("clearNow").classList.toggle("bad", s.status === "dead");
+  $("turns").textContent = `이번 판 ${s.turn.toLocaleString("ko-KR")}턴`;
 
   const box = $("advice");
   box.replaceChildren();
   if (s.status === "offer") { box.textContent = "옵션을 고르세요."; return; }
-  if (s.status === "dead") { box.textContent = `${clearedOf(s)}개 스테이지 클리어. 다시 해 보세요.`; return; }
-  if (s.status === "clear") { box.textContent = `${LAST_STAGE}스테이지까지 모두 클리어!`; return; }
+  if (s.status === "dead") { box.textContent = `${duelResultText(clearedOf(s), s.turn)}. 다시 해 보세요.`; return; }
+  if (s.status === "clear") { box.textContent = `${LAST_STAGE}스테이지까지 모두 클리어! ${s.turn.toLocaleString("ko-KR")}턴`; return; }
   if (peek) box.append(el("span", `간파 : 상대는 ${ACTION_NAME[peek]}`, "fore up"));
   const best = ACTIONS.find((a) => q(a) >= top - 1e-9)!;
   box.append("버튼 숫자 = 그 행동 후 깰 확률. 추천 ", el("span", ACTION_NAME[best], "up"));
@@ -202,9 +204,13 @@ const doAct = (a: Action): void => {
   const t = act(game, a, Math.random);
   game = t.state;
   const [text, tone] = describe(t, before);
-  if (t.end) {
-    stats.best = Math.max(stats.best, clearedOf(game));
+  if (game.status === "dead" || game.status === "clear") {
+    const cleared = clearedOf(game);
+    stats.best = Math.max(stats.best, cleared);
     if (game.status === "clear") stats.fulls += 1;
+    void reportDuel(cleared, game.turn).then((best) => {
+      if (best) $("log").prepend(el("li", `랭킹 기록 갱신 : ${duelResultText(best.best_cleared, best.best_turns)}`, "ok"));
+    });
   }
   feedback(text, tone, t.end === "win" ? "win" : t.end === "lose" || t.taken ? "lose" : undefined);
   render();
@@ -331,3 +337,4 @@ $<HTMLDetailsElement>("logBox").open = matchMedia("(min-width: 641px)").matches;
 renderGuide();
 renderTable();
 render();
+void mountAccount($("account"), "duel");
