@@ -8,4 +8,11 @@ command = "npm run build"
 [assets]
 directory = "./dist"
 binding = "ASSETS"
-run_worker_first = ["/health"]
+run_worker_first = ["/health", "/api/*", "/auth/*"]
+
+# CI swaps in the real id (see .github/workflows/deploy.yml); local `wrangler dev` works with the placeholder.
+[[d1_databases]]
+binding = "DB"
+database_name = "prob-theory-lab-db"
+database_id = "REPLACE_WITH_D1_DATABASE_ID"
+migrations_dir = "migrations"

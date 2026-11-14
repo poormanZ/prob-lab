@@ -14,11 +14,25 @@
 * `src/client/app.ts` : 페이지 스크립트 → `npm run build` 로 `dist/app.js` 생성
 * `static/` : `index.html`, `style.css`
 * `scripts/balance.ts` : 옵션 강도 자동 조절 → `src/balance-report.json` 저장
-* `src/index.ts` : Worker 진입점
+* `src/index.ts` : Worker 진입점. `/api/*`, `/auth/*` 처리, 나머지는 정적 파일
+* `src/auth.ts`, `src/kakao.ts` : 카카오 로그인 → 세션 → 아이디 만들기
+* `src/records.ts` : 유저별 최고 기록 저장, 랭킹 조회
+* `src/client/account.ts` : 로그인 바, 기록 전송 (게임·랭킹 페이지 공용)
+* `static/ranking.html` + `src/client/ranking.ts` : `/ranking` 페이지
+* `migrations/` : D1(Cloudflare SQLite DB) 테이블
+
+## 로그인·랭킹
+* 흐름 : 카카오 로그인 → 처음이면 아이디 만들기 → 새 최고 단계에 오를 때마다 기록 저장
+* 기록 기준 : 최고 단계가 높은 순 → 같으면 그때 상금이 큰 순 → 같으면 먼저 달성한 순
+* 아이디가 없는 유저는 랭킹에 안 나옴
+* 카카오 사용자 ID와 토큰은 응답·로그에 안 남김. 세션 ID는 해시만 저장
+* 한계 : 게임이 브라우저에서 돌아서 서버는 "불가능한 값"만 거름 (단계 1~20, 단계별 상금 상한)
 
 ## 개발
 ```bash
 npm install
+cp .dev.vars.example .dev.vars   # 카카오 키 입력 (로그인 테스트할 때만)
+npm run db:migrate:local         # 로컬 D1 테이블 생성
 npm run dev       # 빌드 후 http://localhost:8787
 npm run check     # lint + typecheck + test
 npm run balance   # 옵션 강도 다시 맞추기 (약 1분)
@@ -27,4 +41,10 @@ npm run balance   # 옵션 강도 다시 맞추기 (약 1분)
 
 ## 배포
 * `main` push 시 `.github/workflows/deploy.yml` 이 `wrangler deploy` 실행 (빌드 포함)
-* GitHub repo secrets 필요 : `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`
+* GitHub repo secrets
+  * 필수 : `CLOUDFLARE_API_TOKEN`(D1 Edit 권한 포함), `CLOUDFLARE_ACCOUNT_ID`
+  * 로그인용 : `KAKAO_REST_API_KEY`, `KAKAO_CLIENT_SECRET`(카카오 앱에서 켠 경우만). 없으면 로그인만 꺼진 채 배포
+* D1 `prob-theory-lab-db` 는 workflow가 없으면 만들고, migration도 자동 적용
+* Kakao Developers 에 Redirect URI 등록 필요
+  * `https://prob-theory-lab.darkq4.workers.dev/auth/kakao/callback`
+  * `http://localhost:8787/auth/kakao/callback`

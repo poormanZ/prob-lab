@@ -141,3 +141,42 @@ th,td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:right;whit
 th{color:var(--muted);font-weight:500}
 tr.best td{background:color-mix(in srgb,var(--gold) 12%,transparent)}
 tr.best td:first-child::after{content:" ★";color:var(--gold)}
+
+/* Account bar + ranking page */
+.top-row{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+.nav a{display:inline-block;padding:8px 14px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);text-decoration:none;font-weight:600;font-size:14px}
+.nav a:hover{border-color:var(--prob)}
+.account-slot{min-height:44px;margin-top:12px}
+.acc{display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 8px 8px 14px;font-size:14px}
+.acc-msg{color:var(--muted)}
+.acc-msg.bad{color:var(--fail);font-weight:600}
+.acc-name{font-size:15px}
+.acc-best{color:var(--gold);font-weight:700}
+.acc .link{margin-left:auto;background:none;border:0;color:var(--muted);cursor:pointer;text-decoration:underline;padding:6px 8px}
+/* Kakao login button colors follow Kakao's brand guide. */
+.kakao{margin-left:auto;display:inline-flex;align-items:center;padding:9px 16px;border-radius:10px;background:#fee500;color:rgba(0,0,0,.85);font-weight:700;text-decoration:none}
+.signup{display:flex;gap:8px;margin-left:auto;flex-wrap:wrap}
+.signup input{padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);width:180px}
+
+.rank-page{margin-top:4px}
+.rank-panel{border-top:1px solid var(--line);border-radius:14px}
+.rank-head{display:flex;align-items:baseline;gap:12px;margin-bottom:8px}
+.rank-head h2{font-size:18px}
+.rank-head .note{margin:0}
+.my-rank{margin:0 0 12px;padding:10px 12px;border-radius:8px;background:color-mix(in srgb,var(--prob) 12%,transparent);font-weight:700}
+.rank-table td,.rank-table th{text-align:left}
+.rank-table .rk{width:56px;text-align:center;font-weight:800;font-size:16px}
+.rank-table th:first-child{text-align:center}
+.rank-table .who{font-weight:600}
+.rank-table .stage{min-width:170px}
+.rank-table .stage b{display:inline-block;width:52px}
+.sbar{display:inline-block;vertical-align:middle;width:100px;height:8px;border-radius:4px;background:var(--rung);position:relative;overflow:hidden}
+.sbar::after{content:"";position:absolute;inset:0 auto 0 0;width:var(--w);background:var(--step)}
+.rank-table .amt{color:var(--gold);font-weight:700;text-align:right}
+.rank-table th:nth-child(4){text-align:right}
+.rank-table .day{color:var(--muted)}
+.rank-table tr[data-top="1"] .rk{color:var(--gold)}
+.rank-table tr[data-top="2"] .rk,.rank-table tr[data-top="3"] .rk{color:var(--step)}
+.rank-table tr.mine td{background:color-mix(in srgb,var(--prob) 12%,transparent)}
+.rank-table .empty{text-align:center;color:var(--muted);padding:32px}
+@media (max-width:640px){.sbar{display:none}.rank-table .stage{min-width:0}.signup input{width:100%}}

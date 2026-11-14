@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>연속 도전 랭킹</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header class="top">
+  <div class="top-row">
+    <div>
+      <h1>연속 도전 랭킹</h1>
+      <p>가장 높이 올라간 단계 순서입니다. 같은 단계면 그때 상금이 큰 사람이 앞, 그것도 같으면 먼저 달성한 사람이 앞입니다.</p>
+    </div>
+    <nav class="nav"><a href="/">게임으로 돌아가기</a></nav>
+  </div>
+  <div id="account" class="account-slot"></div>
+</header>
+
+<main class="lower rank-page">
+  <section class="panel rank-panel">
+    <div class="rank-head"><h2>TOP 100</h2><span class="note" id="rankTotal"></span></div>
+    <p class="my-rank" id="myRank" hidden></p>
+    <div class="tbl"><table class="rank-table">
+      <thead><tr><th>순위</th><th>아이디</th><th>최고 단계</th><th>그때 상금</th><th>달성일</th></tr></thead>
+      <tbody id="rankRows"><tr><td colspan="5" class="empty">불러오는 중…</td></tr></tbody>
+    </table></div>
+    <p class="note">상금은 그 단계에 처음 올라섰을 때 화면에 보인 금액입니다. 옵션에 따라 같은 단계라도 금액이 다릅니다.</p>
+  </section>
+</main>
+<script type="module" src="/ranking.js"></script>
+</body>
+</html>
