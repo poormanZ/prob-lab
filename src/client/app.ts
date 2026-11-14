@@ -123,12 +123,12 @@ const renderAdvice = (): void => {
   if (game.offer) { box.textContent = "옵션을 고르세요."; return; }
   if (game.stage >= MAX_STAGE) { box.textContent = "마지막 단계. 상금을 받으세요."; return; }
   const sure = foreseen(game);
-  if (sure !== null) box.append(el("span", sure ? "예지 : 다음 도전 성공" : "예지 : 다음 도전 실패", `fore ${sure ? "up" : "down"}`));
-  if (game.stage === 0) { box.append("도전해서 1단계부터."); return; }
+  if (sure !== null) box.append(el("span", sure ? "예지 : 다음 강화 성공" : "예지 : 다음 강화 실패", `fore ${sure ? "up" : "down"}`));
+  if (game.stage === 0) { box.append("강화해서 1단계부터."); return; }
   const gain = continueGain(game);
   box.append(
-    el("span", gain >= 0 ? "도전 유리" : "받기 유리", gain >= 0 ? "up" : "down"),
-    ` (도전 시 평균 ${gain >= 0 ? "+" : ""}${won(gain)})`,
+    el("span", gain >= 0 ? "강화 유리" : "받기 유리", gain >= 0 ? "up" : "down"),
+    ` (강화 시 평균 ${gain >= 0 ? "+" : ""}${won(gain)})`,
   );
 };
 

@@ -87,7 +87,7 @@ const show = async <R extends Base>(board: Board<R>): Promise<void> => {
   }
 };
 
-document.title = game === "duel" ? "대결 랭킹" : "연속 도전 랭킹";
+document.title = game === "duel" ? "대결 랭킹" : "강화 랭킹";
 $("gameLink").setAttribute("href", game === "duel" ? "/duel" : "/");
 void mountAccount($("account"), game);
 void (game === "duel" ? show(duel) : show(streak));
